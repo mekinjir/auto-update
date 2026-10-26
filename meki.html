@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AM Preset Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root{--bg-base:#0a0a0f;--bg-panel:#12121a;--bg-box:#1a1a24;--neon:#00d2ff;--neon-glow:rgba(0,210,255,.3);--text:#fff;--text-muted:#8e8e9e;--border:#2a2a35;--success:#00ff9d;--danger:#ff3366;--warn:#ffcc00}*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}body{background-color:var(--bg-base);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+        @keyframes spin{100%{transform:rotate(360deg)}}@keyframes pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}100%{transform:scale(1);opacity:1}}@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(10deg)}75%{transform:rotate(-10deg)}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .icon-spin{animation:spin 4s linear infinite}.icon-pulse{animation:pulse 2s ease-in-out infinite}.icon-float{animation:float 3s ease-in-out infinite}.sidebar a:hover i,.contact-item:hover i,.btn:hover i,.menu-btn:hover i,.chat-input-area label:hover i{animation:shake .4s ease-in-out infinite}
+        .navbar{width:100%;height:60px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;padding:0 20px;position:fixed;top:0;z-index:100}.logo{font-size:1.2rem;font-weight:800;letter-spacing:1px;color:var(--neon);text-shadow:0 0 10px var(--neon-glow);display:flex;align-items:center;gap:8px;cursor:pointer}.logo i{font-size:1.3rem}.menu-btn{background:transparent;border:none;color:var(--text);font-size:1.5rem;cursor:pointer;padding:5px;transition:.3s}.menu-btn:hover{color:var(--neon)}
+        .sidebar{position:fixed;top:60px;right:-300px;width:260px;height:calc(100vh - 60px);background:var(--bg-panel);border-left:1px solid var(--border);transition:.4s cubic-bezier(.4,0,.2,1);padding:20px;z-index:99;box-shadow:-10px 0 30px rgba(0,0,0,.5);overflow-y:auto}.sidebar.open{right:0}.sidebar a{display:flex;align-items:center;gap:12px;color:var(--text-muted);text-decoration:none;padding:15px;border-radius:8px;margin-bottom:5px;transition:.3s;font-size:.9rem;font-weight:500;cursor:pointer}.sidebar a i{font-size:1.2rem}.sidebar a:hover,.sidebar a.active{background:rgba(0,210,255,.05);color:var(--neon);border-left:3px solid var(--neon)}
+        .main-content{margin-top:60px;padding:20px 15px;display:flex;justify-content:center;flex:1;width:100%}.wrapper{width:100%;max-width:800px}.page-section{display:none;animation:fadeIn .3s ease}.page-section.active{display:block}
+        .input-group{display:flex;gap:10px;margin-bottom:25px}.input-wrapper{flex:1;position:relative;display:flex;align-items:center}.input-wrapper i.fa-link{position:absolute;left:15px;color:var(--text-muted)}.input-wrapper input{width:100%;background:var(--bg-panel);border:1px solid var(--border);padding:15px 45px 15px 40px;border-radius:8px;color:var(--text);font-size:.9rem;outline:none;transition:.3s}.input-wrapper input:focus{border-color:var(--neon);box-shadow:0 0 10px rgba(0,210,255,.1)}.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:var(--text);font-size:.8rem;cursor:pointer;display:none;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;transition:all .2s}.clear-btn:hover{background:var(--danger);color:#fff}.btn-search{background:var(--neon);color:#000;border:1px solid var(--neon);padding:0 25px;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px}.btn-search:hover{box-shadow:0 0 15px var(--neon-glow)}
+        #console-box{display:none;background:#000;border:1px solid var(--border);border-radius:8px;padding:15px;font-family:'Fira Code',monospace;font-size:.8rem;color:var(--neon);height:150px;overflow-y:auto;margin-bottom:20px;box-shadow:inset 0 0 10px rgba(0,210,255,.05)}.log-line{margin-bottom:6px;animation:fadeIn .2s}.log-time{color:#555;margin-right:8px}.log-success{color:var(--success)}.log-error{color:var(--danger)}.log-warn{color:var(--warn)}
+        #result-area { display: none; }
+        .video-detail{text-align:center;margin-bottom:25px}.video-preview{width:180px;height:240px;object-fit:contain;background:#000;border-radius:12px;margin:0 auto 10px auto;display:block;box-shadow:0 5px 15px rgba(0,0,0,.5);border:1px solid var(--border);pointer-events:none}.btn-unmute{background:var(--bg-box);color:var(--text);border:1px solid var(--border);padding:8px 15px;border-radius:6px;font-size:.8rem;cursor:pointer;margin-bottom:15px;display:inline-flex;align-items:center;gap:8px;transition:.2s}.btn-unmute:hover{border-color:var(--neon);color:var(--neon)}.video-caption{font-size:.9rem;font-weight:500;margin-bottom:15px;text-align:left;line-height:1.4}.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;text-align:left;margin-bottom:20px}.stat-box span{display:block;font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}.stat-box strong{font-size:.95rem;font-weight:600;color:var(--text)}.preset-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px dashed var(--border)}.preset-header h3{font-size:1.1rem;font-weight:700}.preset-count{background:rgba(0,210,255,.1);color:var(--neon);border:1px solid rgba(0,210,255,.3);padding:2px 8px;border-radius:6px;font-size:.8rem;font-weight:700}
+        
+        .preset-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:15px;transition:.3s;display:flex;flex-direction:column;gap:12px}
+        .preset-card:hover{border-color:rgba(0,210,255,.3);box-shadow:0 0 15px rgba(0,210,255,.05)}
+        .card-content{display:flex; gap:15px;}
+        .preset-img{width:80px; height:110px; object-fit:cover; border-radius:8px; border:1px solid var(--border); flex-shrink:0; background:#000;}
+        .card-meta{flex:1; display:flex; flex-direction:column; justify-content:center;}
+        .card-meta h4{font-size:1rem;margin-bottom:5px;font-weight:600; display:flex; flex-wrap:wrap; align-items:center; gap:5px;}
+        .tags{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+        .tag-xml{background:rgba(0,210,255,.1);color:var(--neon);padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700}
+        .tag-size{font-size:.75rem;color:var(--text-muted)}
+        .card-meta p{font-size:.8rem;color:var(--text-muted)}
+        .link-box{background:#000;border:1px solid var(--border);padding:12px;border-radius:8px;font-family:'Fira Code',monospace;font-size:.75rem;color:var(--text-muted);word-break:break-all;line-height:1.5;width:100%;}
+        
+        .action-buttons{display:flex;gap:10px; width:100%;}.btn{flex:1;padding:10px;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px;text-decoration:none;transition:.2s}.btn-copy{background:var(--bg-box);color:var(--text);border:1px solid var(--border)}.btn-copy:hover{border-color:var(--neon)}.btn-copy.copied{background:rgba(0,210,255,.1);color:var(--neon);border-color:var(--neon)}.btn-open{background:var(--neon);color:#000;border:1px solid var(--neon)}.btn-open:hover{box-shadow:0 0 10px var(--neon-glow)}
+        
+        /* CHAT GLOBAL */
+        .chat-container{display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:400px;background:var(--bg-panel);border-radius:12px;border:1px solid var(--border);overflow:hidden;padding-bottom:70px;}
+        .chat-messages{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:12px;}
+        
+        .chat-bubble{background:var(--bg-box);padding:10px 15px;border-radius:12px 12px 12px 0;max-width:80%;word-wrap:break-word;align-self:flex-start;border:1px solid var(--border);position:relative;transition: background 0.2s; user-select: none; -webkit-user-select: none;}
+        .chat-bubble.own{background:rgba(0,210,255,.1);color:var(--neon);align-self:flex-end;border-radius:12px 12px 0 12px;border-color:rgba(0,210,255,.3);}
+        .chat-bubble:active { background: rgba(255,255,255,0.1); }
+        .chat-bubble img{max-width:100%;border-radius:8px;margin-top:8px; pointer-events: none;}
+        .chat-bubble .sender{font-size:.65rem;color:var(--text-muted);margin-bottom:4px;display:block;font-weight:bold;}
+        
+        .chat-input-area{display:flex;gap:10px;padding:10px;border-top:1px solid var(--border);background:var(--bg-base);align-items:center;}
+        .chat-input-area input[type="text"]{flex:1;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel);color:#fff;outline:none;}
+        .chat-input-area input[type="text"]:focus{border-color:var(--neon);}
+        .chat-input-area label{background:var(--bg-box);border:1px solid var(--border);padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--text-muted);transition:.2s;}
+        .chat-input-area label:hover{border-color:var(--neon);color:var(--neon);}
+        .chat-input-area button{background:var(--neon);color:#000;border:none;padding:12px 15px;border-radius:8px;cursor:pointer;font-weight:700;}
+        
+        /* AI FAB */
+        .ai-fab{position:fixed;bottom:80px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--neon);color:#000;display:flex;justify-content:center;align-items:center;font-size:1.5rem;box-shadow:0 4px 15px var(--neon-glow);cursor:pointer;z-index:9998;transition:transform .3s ease}
+        .ai-fab:hover{transform:scale(1.1);box-shadow:0 0 25px var(--neon)}
+        .ai-chat-window{position:fixed;bottom:150px;right:20px;width:350px;height:500px;background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.5);z-index:9998;display:none;flex-direction:column;overflow:hidden;animation:slideUp .3s ease}
+        .ai-chat-window.active{display:flex}
+        .ai-chat-header{background:var(--bg-box);padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);color:var(--neon);font-weight:bold}
+        .ai-chat-header .close-ai{background:transparent;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer}
+        .ai-chat-header .close-ai:hover{color:var(--danger)}
+        .ai-chat-window .chat-container{height:calc(100% - 55px);border:none;border-radius:0;padding-bottom:0;}
+        
+        /* CUSTOM MODAL POPUP */
+        .custom-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:none;justify-content:center;align-items:center;backdrop-filter:blur(4px);}
+        .custom-modal.active{display:flex;}
+        .custom-modal-content{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:25px;width:90%;max-width:350px;text-align:center;animation:slideUp .3s ease;box-shadow:0 10px 30px rgba(0,0,0,0.8);}
+        .custom-modal-content h3{color:var(--text);margin-bottom:10px;font-size:1.2rem;}
+        .custom-modal-content p{color:var(--text-muted);font-size:.9rem;margin-bottom:20px;}
+        .custom-modal-actions{display:flex;gap:10px;}
+        .custom-modal-actions button{flex:1;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;border:none;transition:.2s;}
+        .btn-modal-cancel{background:var(--bg-box);color:var(--text);border:1px solid var(--border) !important;}
+        .btn-modal-cancel:hover{background:var(--border);}
+        .btn-modal-confirm{background:var(--danger);color:#fff;}
+        .btn-modal-confirm:hover{box-shadow:0 0 15px rgba(255,51,102,0.5);}
+
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,15,0.95);z-index:99998;display:none;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(5px);}
+        .modal-content{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:30px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.8);}
+        .modal-content h2{color:var(--neon);margin-bottom:10px;}
+        .modal-content p{color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;}
+        .modal-content input{width:100%;padding:15px;border-radius:8px;border:1px solid var(--border);background:var(--bg-base);color:var(--text);font-size:1rem;outline:none;margin-bottom:15px;text-align:center;}
+        .modal-content input:focus{border-color:var(--neon);}
+        .modal-content button{width:100%;padding:15px;border-radius:8px;background:var(--neon);color:#000;border:none;font-weight:700;font-size:1rem;cursor:pointer;transition:.3s;}
+        .modal-content button:hover{box-shadow:0 0 15px var(--neon-glow);}
+        .modal-content .error-msg{color:var(--danger);font-size:0.8rem;margin-bottom:10px;display:none;}
+        .contact-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:20px}.contact-item{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:15px;display:flex;align-items:center;gap:15px;text-decoration:none;color:var(--text);transition:.3s}.contact-item:hover{border-color:var(--neon);box-shadow:0 0 10px rgba(0,210,255,.1)}.contact-icon{width:45px;height:45px;background:rgba(0,210,255,.1);color:var(--neon);display:flex;justify-content:center;align-items:center;border-radius:8px;font-size:1.2rem}.contact-info span{display:block;font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}.contact-info strong{font-family:'Fira Code',monospace;font-size:.9rem}
+        .toast-container{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;width:90%;max-width:350px}.toast{background:var(--bg-box);border:1px solid var(--border);border-left:4px solid var(--neon);padding:12px 20px;border-radius:8px;color:var(--text);font-size:.85rem;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.8);display:flex;align-items:center;gap:10px;transform:translateY(20px);opacity:0;transition:all .4s}.toast.show{transform:translateY(0);opacity:1}.toast-error{border-left-color:var(--danger)}.toast-error i{color:var(--danger)}.toast-success{border-left-color:var(--success)}.toast-success i{color:var(--success)}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @media(min-width:600px){.contact-grid{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:600px){.ai-chat-window{width:calc(100% - 40px);right:20px;left:20px;bottom:150px;}}
+    </style>
+</head>
+<body>
+
+    <div id="app"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // GANTI CONFIG FIREBASE DI SINI
+        const firebaseConfig = {
+            apiKey: "AIzaSyBaLh_Q5brZAnj3I8-IUABK8bpmoTG0HJk",
+            authDomain: "am-finder-71071.firebaseapp.com",
+            projectId: "am-finder-71071",
+            storageBucket: "am-finder-71071.firebasestorage.app",
+            messagingSenderId: "135057336538",
+            appId: "1:135057336538:web:ca04ae3590ed81bd959de3",
+            measurementId: "G-BPTQJND0LS"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const DEV_USERNAME = "Mekinjir";
+        let hasClickedWA = localStorage.getItem('hasClickedWA') === 'true';
+        let isVerified = localStorage.getItem('isVerified') === 'true';
+        let abortController = null;
+        let username = localStorage.getItem('username') || '';
+        let isDev = localStorage.getItem('isDev') === 'true';
+        
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        // ==========================================
+        // FITUR PEMBERSIH LINK (REGEX SAKTI)
+        // ==========================================
+        window.ekstrakLinkCerdas = function(teks) {
+            if (!teks) return [];
+            let links = [];
+            
+            // Bersihin karakter aneh (emoji/non-ASCII) biar gak ngerusak regex
+            let cleanedTeks = teks.replace(/[^\x20-\x7E\s]/g, ''); 
+            
+            // Regex nyari link yang ada embel-embel domain target
+            let urlRegex = /(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)*(?:alightcreative\.com|drive\.google\.com|mediafire\.com|alight\.link)[^\s]*/gi;
+            
+            let matches = cleanedTeks.match(urlRegex);
+            
+            if (matches) {
+                matches.forEach(w => {
+                    let clean = w;
+                    
+                    // Benerin slash yang kurang atau kelebihan
+                    clean = clean.replace(/https?:\/*/gi, 'https://');
+                    
+                    // Kalau gak ada http di depan, tambahin
+                    if (!clean.startsWith('http')) {
+                        clean = 'https://' + clean;
+                    }
+                    
+                    // Buang tanda baca di akhir link
+                    clean = clean.replace(/[.,!?\]\)>]$/, '');
+                    
+                    links.push(clean);
+                });
+            }
+            return [...new Set(links)];
+        };
+
+        // ==========================================
+        // FITUR AMBIL GAMBAR DARI GOOGLE DRIVE
+        // ==========================================
+        window.getDriveThumbnail = function(url) {
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w300`;
+            }
+            return null;
+        };
+
+        window.printLog = function(message, type = 'normal') {
+            const consoleBox = document.getElementById('console-box');
+            if(!consoleBox) return;
+            const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
+            let colorClass = '';
+            if (type === 'success') colorClass = 'log-success';
+            if (type === 'error') colorClass = 'log-error';
+            if (type === 'warn') colorClass = 'log-warn';
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.innerHTML = `<span class="log-time">[${time}]</span> <span class="${colorClass}">${message}</span>`;
+            consoleBox.appendChild(div);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        };
+
+        window.toggleClearBtn = function(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            if (input.value.trim().length > 0) { btn.style.display = 'flex'; } else { btn.style.display = 'none'; }
+        };
+
+        window.clearSearch = function(type) {
+            if (abortController) abortController.abort();
+            if (type === 'preset') {
+                document.getElementById('ttLink').value = '';
+                document.getElementById('clearPreset').style.display = 'none';
+                document.getElementById('result-area').style.display = 'none';
+                document.getElementById('console-box').style.display = 'none';
+                const vid = document.getElementById('vidPreview'); vid.pause(); vid.removeAttribute('src'); vid.load();
+                document.getElementById('btnSearch').innerHTML = '<i class="fa-solid fa-play"></i> Cari';
+                document.getElementById('btnSearch').disabled = false;
+            } else if (type === 'download') {
+                document.getElementById('dlLink').value = '';
+                document.getElementById('clearDownload').style.display = 'none';
+                document.getElementById('dl-result-area').style.display = 'none';
+                document.getElementById('btnDl').innerHTML = '<i class="fa-solid fa-download"></i> Ambil';
+                document.getElementById('btnDl').disabled = false;
+            }
+        };
+
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            let icon = '<i class="fa-solid fa-circle-info"></i>';
+            if (type === 'success') icon = '<i class="fa-solid fa-circle-check icon-pulse"></i>';
+            if (type === 'error') icon = '<i class="fa-solid fa-circle-xmark"></i>';
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
+        };
+
+        // ==========================================
+        // FITUR SALIN LINK (ANTI GAGAL)
+        // ==========================================
+        window.salinLink = function(btn, url) {
+            if (!url || url === '#') return window.showToast("Link tidak valid!", "error");
+
+            const ubahTombol = (button) => {
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check icon-pulse"></i> Tersalin';
+                button.classList.add('copied');
+                window.showToast("Link berhasil disalin!", "success");
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('copied');
+                }, 2000);
+            };
+
+            const fallbackCopy = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        ubahTombol(btn);
+                    } else {
+                        window.showToast("Gagal menyalin, coba manual.", "error");
+                    }
+                } catch (err) {
+                    window.showToast("Gagal menyalin: " + err, "error");
+                }
+                document.body.removeChild(textArea);
+            };
+
+            // Cek apakah browser mendukung clipboard API modern & di HTTPS
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(() => {
+                    ubahTombol(btn);
+                }).catch(err => {
+                    fallbackCopy(url);
+                });
+            } else {
+                // Fallback buat ZArchiver / HTTP / browser jadul
+                fallbackCopy(url);
+            }
+        };
+
+        let customModalCallback = null;
+        window.showCustomModal = function(title, message, btnConfirmText, btnConfirmColor, callback) {
+            document.getElementById('customModalTitle').innerText = title;
+            document.getElementById('customModalMsg').innerText = message;
+            const btnConfirm = document.getElementById('customModalBtnConfirm');
+            btnConfirm.innerText = btnConfirmText;
+            btnConfirm.style.background = btnConfirmColor;
+            customModalCallback = callback;
+            document.getElementById('customModal').classList.add('active');
+        };
+        window.closeCustomModal = function() {
+            document.getElementById('customModal').classList.remove('active');
+            customModalCallback = null;
+        };
+        window.executeCustomModal = function() {
+            if(customModalCallback) customModalCallback();
+            closeCustomModal();
+        };
+
+        window.openUsernameModal = function() {
+            document.getElementById('usernameModal').style.display = 'flex';
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = ''; 
+            document.getElementById('regError').style.display = 'none';
+        };
+        window.closeUsernameModal = function() { document.getElementById('usernameModal').style.display = 'none'; };
+
+        window.submitUsername = async function() {
+            const inputName = document.getElementById('regUsername').value.trim();
+            const inputPass = document.getElementById('regPassword').value.trim();
+            const errorMsg = document.getElementById('regError');
+            const btn = document.getElementById('btnRegister');
+
+            if (inputName.length < 3) { errorMsg.innerText = "Username minimal 3 karakter!"; errorMsg.style.display = 'block'; return; }
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengecek...';
+            btn.disabled = true;
+
+            try {
+                if (inputName.toLowerCase() === DEV_USERNAME.toLowerCase()) {
+                    const configDoc = await db.collection("settings").doc("dev_config").get();
+                    let dbPassword = "meki123"; 
+                    if (configDoc.exists) { dbPassword = configDoc.data().password; }
+                    
+                    if (inputPass !== dbPassword) {
+                        errorMsg.innerText = "Password Developer salah!";
+                        errorMsg.style.display = 'block';
+                        btn.innerHTML = 'Daftar'; btn.disabled = false;
+                        return;
+                    }
+                }
+
+                const userDoc = await db.collection("users").doc(inputName.toLowerCase()).get();
+                if (userDoc.exists && inputName.toLowerCase() !== DEV_USERNAME.toLowerCase()) {
+                    errorMsg.innerText = "Username sudah dipakai orang lain! Cari yang lain."; errorMsg.style.display = 'block';
+                } else {
+                    if(!userDoc.exists) {
+                        await db.collection("users").doc(inputName.toLowerCase()).set({ displayName: inputName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    }
+                    
+                    username = inputName; localStorage.setItem('username', username);
+                    isDev = (inputName.toLowerCase() === DEV_USERNAME.toLowerCase()); 
+                    localStorage.setItem('isDev', isDev);
+                    
+                    window.showToast("Berhasil masuk! Selamat datang, " + username, "success");
+                    closeUsernameModal();
+                    
+                    document.getElementById('chatUser').innerText = username + (isDev ? " (DEV)" : "");
+                    if(isDev) { document.getElementById('nav-dev-settings').style.display = 'flex'; } 
+                    else { document.getElementById('nav-dev-settings').style.display = 'none'; }
+                    
+                    initChat(); 
+                }
+            } catch (e) { errorMsg.innerText = "Kesalahan database: " + e.message; errorMsg.style.display = 'block'; } 
+            finally { btn.innerHTML = 'Daftar'; btn.disabled = false; }
+        };
+
+        window.logoutChat = function() {
+            localStorage.removeItem('username'); 
+            localStorage.removeItem('isDev');
+            username = ''; isDev = false;
+            document.getElementById('nav-dev-settings').style.display = 'none';
+            window.showToast("Berhasil keluar.", "success");
+            switchPage('page-search', 'nav-search');
+        };
+
+        window.updateDevPassword = async function() {
+            const newPass = document.getElementById('newDevPass').value.trim();
+            if (newPass.length < 5) return window.showToast("Password minimal 5 karakter!", "warn");
+            
+            try {
+                await db.collection("settings").doc("dev_config").set({ password: newPass });
+                window.showToast("Password Dev berhasil diubah!", "success");
+                document.getElementById('newDevPass').value = '';
+            } catch (e) {
+                window.showToast("Gagal ubah password: " + e.message, "error");
+            }
+        };
+
+        window.initChat = function() {
+            if (!username) { openUsernameModal(); return; }
+            document.getElementById('chatUser').innerText = username + (isDev ? " (DEV)" : "");
+
+            const chatBox = document.getElementById('chatMessages');
+            if (window.chatUnsubscribe) window.chatUnsubscribe();
+            window.chatUnsubscribe = db.collection("chat").orderBy("timestamp", "asc").limitToLast(50).onSnapshot((snapshot) => {
+                chatBox.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const msg = doc.data(); 
+                    const msgId = doc.id;
+                    const isOwn = msg.sender === username;
+                    
+                    const bubble = document.createElement('div'); 
+                    bubble.className = `chat-bubble ${isOwn ? 'own' : ''}`;
+                    
+                    let content = `<span class="sender">${msg.sender}</span>`;
+                    if (msg.text) content += `<div>${msg.text}</div>`;
+                    if (msg.image) content += `<img src="${msg.image}" alt="foto">`;
+                    
+                    bubble.innerHTML = content; 
+                    
+                    if (isOwn || isDev) {
+                        let pressTimer;
+                        const startPress = (e) => {
+                            e.preventDefault(); 
+                            pressTimer = setTimeout(() => {
+                                window.showCustomModal(
+                                    "Hapus Pesan?", 
+                                    "Pesan ini bakal dihapus buat semua orang.", 
+                                    "Hapus", 
+                                    "var(--danger)", 
+                                    async () => {
+                                        try {
+                                            await db.collection("chat").doc(msgId).delete();
+                                            window.showToast("Pesan dihapus", "success");
+                                        } catch (e) {
+                                            window.showToast("Gagal hapus: " + e.message, "error");
+                                        }
+                                    }
+                                );
+                                if(navigator.vibrate) navigator.vibrate(50); 
+                            }, 600); 
+                        };
+                        const cancelPress = () => clearTimeout(pressTimer);
+                        
+                        bubble.addEventListener('mousedown', startPress);
+                        bubble.addEventListener('touchstart', startPress);
+                        bubble.addEventListener('mouseup', cancelPress);
+                        bubble.addEventListener('mouseleave', cancelPress);
+                        bubble.addEventListener('touchend', cancelPress);
+                        bubble.addEventListener('touchmove', cancelPress);
+                    }
+                    
+                    chatBox.appendChild(bubble);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        };
+
+        window.sendChat = async function() {
+            const input = document.getElementById('chatInput'); const text = input.value.trim();
+            if (!text) return;
+            if (!username) { window.showToast("Daftar nama dulu buat chat!", "warn"); return; }
+            input.value = '';
+            try { await db.collection("chat").add({ sender: username, text: text, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); } 
+            catch (e) { window.showToast("Gagal kirim chat: " + e.message, "error"); }
+        };
+
+        window.uploadChatImage = function(event) {
+            const file = event.target.files[0]; if (!file) return;
+            if (!username) { window.showToast("Daftar nama dulu buat chat!", "warn"); return; }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = async () => {
+                    const canvas = document.createElement('canvas'); const MAX_WIDTH = 400; const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const base64Img = canvas.toDataURL('image/jpeg', 0.7); 
+                    try { await db.collection("chat").add({ sender: username, image: base64Img, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); window.showToast("Foto terkirim!", "success"); } 
+                    catch (err) { window.showToast("Gagal kirim foto.", "error"); }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file); event.target.value = ''; 
+        };
+
+        window.saveFavorite = async function(url, usn) {
+            if (!username) { window.showToast("Daftar nama di menu Chat dulu buat simpan favorit!", "warn"); return; }
+            try {
+                const docId = btoa(url).substring(0, 20); 
+                await db.collection("favorites").doc(docId).set({ url: url, user: usn, savedBy: username, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                window.showToast("Preset berhasil disimpan ke Favorit!", "success");
+            } catch (e) { window.showToast("Gagal simpan: " + e.message, "error"); }
+        };
+
+        window.loadFavorites = function() {
+            const container = document.getElementById('favoriteList');
+            if(!container) return;
+            container.innerHTML = '<div style="text-align:center;color:var(--neon);"><i class="fa-solid fa-spinner fa-spin"></i> Memuat favorit...</div>';
+            db.collection("favorites").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                container.innerHTML = '';
+                if (snapshot.empty) { container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Belum ada preset favorit tersimpan.</div>'; return; }
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    let badgeType = data.url.includes('drive.google') || data.url.includes('mediafire') ? 'XML' : 'PRESET AM';
+                    
+                    let imgSrc = data.url.includes('drive.google') ? getDriveThumbnail(data.url) : null;
+                    if(!imgSrc) imgSrc = 'https://via.placeholder.com/80x110/111/00d2ff?text=No+Preview';
+
+                    const card = document.createElement('div'); card.className = 'preset-card';
+                    card.innerHTML = `
+                        <div class="card-content">
+                            <img src="${imgSrc}" class="preset-img" alt="Preview" onerror="this.src='https://via.placeholder.com/80x110/111/00d2ff?text=No+Preview'">
+                            <div class="card-meta">
+                                <h4>@${data.user} | 9:16</h4>
+                                <div class="tags"><span class="tag-xml">${badgeType}</span></div>
+                                <p>Disimpan oleh: ${data.savedBy}</p>
+                            </div>
+                        </div>
+                        <div class="link-box">${data.url}</div>
+                        <div class="action-buttons">
+                            <button class="btn btn-copy" onclick="salinLink(this, '${data.url}')"><i class="fa-regular fa-copy"></i> Salin</button>
+                            <a href="${data.url}" target="_blank" class="btn btn-open"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka</a>
+                        </div>`;
+                    container.appendChild(card);
+                });
+            });
+        };
+
+        window.toggleAiChat = function() {
+            const win = document.getElementById('aiChatWindow');
+            win.classList.toggle('active');
+            if(win.classList.contains('active')) {
+                document.getElementById('aiInput').focus();
+                document.getElementById('aiChatWindow').scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        window.askAI = async function() {
+            const input = document.getElementById('aiInput');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            const chatBox = document.getElementById('aiMessages');
+            chatBox.innerHTML += `<div class="chat-bubble own"><span class="sender">Kamu</span><div>${text}</div></div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const loadingId = 'ai-loading-' + Date.now();
+            chatBox.innerHTML += `<div class="chat-bubble" id="${loadingId}"><span class="sender">AI Asisten</span><div><i class="fa-solid fa-spinner fa-spin"></i> Mikir...</div></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const userRole = isDev ? "Developer asli (Mekinjir)" : `User biasa bernama ${username || 'Anonim'}`;
+            const systemPrompt = `Kamu adalah AI Asisten cerdas untuk web "AM Preset Finder" yang dibuat oleh Mekinjir. 
+Saat ini, kamu sedang berbicara dengan: ${userRole}.
+Tugas utamamu menjawab pertanyaan seputar:
+- Cara pakai Pencari Preset.
+- Cara pakai Downloader (Video, HD, MP3, Slide Foto).
+- Fitur Favorit.
+- Chat Global.
+- Kontak Developer (WA: +62 858-0403-9219, Telegram: @meki_real).
+- Kendala (hasil 0 karena link private/komentar balasan).
+ATURAN:
+1. Jika yang chat adalah Developer (Mekinjir), sapa dia dengan hormat atau akrab.
+2. Kamu boleh membalas sapaan santai seperti "Halo", "Gabut", "Apa kabar" dengan ringan.
+3. JIKA user bertanya hal yang JAUH di luar topik web (misal: resep nasi goreng, politik), tolak dengan sopan.
+4. JANGAN gunakan format markdown seperti bintang dua (**). Jawab dengan teks biasa.`;
+
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer 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'
+                    },
+                    body: JSON.stringify({
+                        model: 'openai/gpt-oss-120b',
+                        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: text }],
+                        temperature: 0.7, max_tokens: 300
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                if (data.error) throw new Error(data.error.message || "API Key salah.");
+                if (data.choices && data.choices.length > 0) {
+                    let reply = data.choices[0].message.content;
+                    let formattedReply = reply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+                    chatBox.innerHTML += `<div class="chat-bubble"><span class="sender">AI Asisten</span><div>${formattedReply}</div></div>`;
+                } else { throw new Error("Format respon Groq gak valid."); }
+            } catch (error) {
+                document.getElementById('loadingId')?.remove();
+                document.getElementById(loadingId).remove();
+                chatBox.innerHTML += `<div class="chat-bubble" style="color:var(--danger); border-color:var(--danger);"><span class="sender">AI Asisten</span><div>Gagal: ${error.message}</div></div>`;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        window.cariPreset = async function() {
+            const linkInput = document.getElementById('ttLink').value.trim();
+            const btn = document.getElementById('btnSearch'); const resultArea = document.getElementById('result-area');
+            const consoleBox = document.getElementById('console-box'); const presetList = document.getElementById('presetList');
+            const videoPlayer = document.getElementById('vidPreview'); const btnUnmute = document.getElementById('btnUnmute');
+            if (!linkInput || !linkInput.includes('tiktok.com')) { window.showToast("Masukin link TikTok yang valid lek!", "warn"); return; }
+            if (abortController) abortController.abort(); abortController = new AbortController();
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            resultArea.style.display = 'none'; consoleBox.style.display = 'block'; consoleBox.innerHTML = ''; presetList.innerHTML = ''; document.getElementById('presetCount').innerText = '0'; btnUnmute.style.display = 'none';
+            videoPlayer.pause(); videoPlayer.removeAttribute('src'); videoPlayer.load();
+            try {
+                window.printLog("Memulai modul ekstraksi...", "normal"); await delay(300); window.printLog(`Target URL: ${linkInput}`, "normal"); await delay(400); window.printLog("Menghubungkan ke server TikTok...", "warn"); await delay(500);
+                const resInfo = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(linkInput)}`, { signal: abortController.signal }); const jsonInfo = await resInfo.json();
+                window.printLog("Respon 200 OK. Membaca payload info video...", "success"); await delay(300);
+                if (jsonInfo.code !== 0 || !jsonInfo.data) throw new Error("Gagal ambil info video. Pastikan link valid.");
+                
+                const videoData = jsonInfo.data;
+                const videoCover = videoData.cover || videoData.origin_cover || 'https://via.placeholder.com/150';
+                
+                document.getElementById('vidCaption').innerText = videoData.title || 'Tanpa Judul';
+                document.getElementById('statAccount').innerText = `@${videoData.author.unique_id}`;
+                document.getElementById('statComments').innerText = videoData.comment_count > 1000 ? (videoData.comment_count/1000).toFixed(1)+'K' : videoData.comment_count;
+                document.getElementById('statViews').innerText = videoData.play_count > 1000 ? (videoData.play_count/1000).toFixed(1)+'K' : videoData.play_count;
+                document.getElementById('statLikes').innerText = videoData.digg_count > 1000 ? (videoData.digg_count/1000).toFixed(1)+'K' : videoData.digg_count;
+                
+                if (videoData.images && videoData.images.length > 0) { videoPlayer.poster = videoData.images[0]; videoPlayer.removeAttribute('src'); videoPlayer.load(); } 
+                else {
+                     videoPlayer.src = videoData.play; videoPlayer.muted = false; videoPlayer.loop = true; 
+                     let playPromise = videoPlayer.play();
+                     if (playPromise !== undefined) {
+                         playPromise.catch(error => {
+                             videoPlayer.muted = true; videoPlayer.play(); btnUnmute.style.display = 'inline-flex'; 
+                             window.showToast("Klik di mana saja pada layar untuk menyalakan suara!", "info");
+                             const unmuteOnClick = () => { if (videoPlayer.muted) { videoPlayer.muted = false; btnUnmute.style.display = 'none'; window.showToast("Suara dinyalakan!", "success"); } document.removeEventListener('click', unmuteOnClick); document.removeEventListener('touchend', unmuteOnClick); };
+                             document.addEventListener('click', unmuteOnClick); document.addEventListener('touchend', unmuteOnClick);
+                         });
+                     }
+                }
+
+                window.printLog("Mengekstrak deskripsi & komentar...", "warn"); await delay(500);
+                const resComment = await fetch(`https://www.tikwm.com/api/comment/list?url=${encodeURIComponent(linkInput)}&count=50`, { signal: abortController.signal }); const jsonComment = await resComment.json();
+                
+                let ketemu = [];
+
+                if (videoData.title) {
+                    let linksDiDeskripsi = ekstrakLinkCerdas(videoData.title);
+                    linksDiDeskripsi.forEach(url => {
+                        ketemu.push({ user: videoData.author, url: url, source: 'Deskripsi' });
+                    });
+                }
+
+                if (jsonComment.code === 0 && jsonComment.data && jsonComment.data.comments) {
+                    const comments = jsonComment.data.comments;
+                    window.printLog(`Berhasil mengekstrak ${comments.length} komentar mentah.`, "success"); 
+                    comments.forEach(k => {
+                        let linksDiKomentar = ekstrakLinkCerdas(k.text);
+                        linksDiKomentar.forEach(url => {
+                            ketemu.push({ user: k.user, url: url, source: 'Komentar' });
+                        });
+                    });
+                } else {
+                    window.printLog("Gagal ambil komentar / kosong, lanjut cek deskripsi.", "warn");
+                }
+
+                window.printLog(`Ditemukan ${ketemu.length} link preset valid.`, "success"); await delay(600); window.printLog("Merender antarmuka...", "normal"); await delay(400);
+                consoleBox.style.display = 'none'; resultArea.style.display = 'block';
+                
+                if (ketemu.length === 0) { 
+                    presetList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fa-solid fa-ghost" style="font-size:2rem; margin-bottom:10px;"></i><br>Tidak ada link preset ditemukan di deskripsi maupun komentar.</div>'; 
+                    window.showToast("Tidak ada preset ditemukan.", "warn"); return; 
+                }
+                
+                document.getElementById('presetCount').innerText = ketemu.length;
+                ketemu.forEach((item, i) => {
+                    const url = item.url; const usn = item.user.unique_id || 'unknown';
+                    let badgeType = 'PRESET AM'; let sizeText = '-'; 
+                    if (url.includes('drive.google') || url.includes('mediafire') || url.includes('.xml')) { badgeType = 'XML'; sizeText = (Math.random() * (200 - 50) + 50).toFixed(1) + ' KB'; }
+                    
+                    let sourceBadge = item.source === 'Deskripsi' ? ' <span style="font-size:0.6rem; color:var(--warn);">(Caption)</span>' : '';
+
+                    let imgSrc = null;
+                    if (url.includes('drive.google')) {
+                        imgSrc = getDriveThumbnail(url);
+                    } 
+                    if (!imgSrc) {
+                        imgSrc = videoCover;
+                    }
+
+                    const card = document.createElement('div'); card.className = 'preset-card';
+                    card.innerHTML = `
+                        <div class="card-content">
+                            <img src="${imgSrc}" class="preset-img" alt="Preview" onerror="this.src='${videoCover}'">
+                            <div class="card-meta">
+                                <h4>@${usn} | 9:16 ${sourceBadge}</h4>
+                                <div class="tags"><span class="tag-xml">${badgeType}</span> ${sizeText !== '-' ? `<span class="tag-size">${sizeText}</span>` : ''}</div>
+                                <p>${badgeType === 'XML' ? 'File mentah XML' : 'Link Share Preset AM'}</p>
+                            </div>
+                        </div>
+                        <div class="link-box">${url}</div>
+                        <div class="action-buttons">
+                            <button class="btn btn-copy" onclick="salinLink(this, '${url}')"><i class="fa-regular fa-copy"></i> Salin</button>
+                            <button class="btn btn-copy" style="border-color:var(--warn); color:var(--warn);" onclick="saveFavorite('${url}', '${usn}')"><i class="fa-solid fa-star"></i> Simpan</button>
+                            <a href="${url}" target="_blank" class="btn btn-open"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka</a>
+                        </div>`;
+                    presetList.appendChild(card);
+                });
+            } catch (error) {
+                if (error.name === 'AbortError') { console.log("Fetch dibatalkan oleh user"); } 
+                else { window.printLog(error.message, "error"); await delay(1500); consoleBox.style.display = 'none'; window.showToast(error.message, "error"); }
+            } finally { btn.innerHTML = '<i class="fa-solid fa-play"></i> Cari'; btn.disabled = false; }
+        };
+
+        window.downloadTikTok = async function() {
+            const link = document.getElementById('dlLink').value.trim(); const btn = document.getElementById('btnDl');
+            const result = document.getElementById('dl-result-area'); const vidContainer = document.getElementById('dlVideoContainer');
+            const slideContainer = document.getElementById('dlSlideContainer'); const slideGrid = document.getElementById('dlSlideGrid');
+            if (!link || !link.includes('tiktok.com')) { window.showToast("Masukin link TikTok yang valid lek!", "warn"); return; }
+            if (abortController) abortController.abort(); abortController = new AbortController();
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; result.style.display = 'none'; vidContainer.style.display = 'none'; slideContainer.style.display = 'none'; slideGrid.innerHTML = '';
+            try {
+                const res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(link)}`, { signal: abortController.signal }); const json = await res.json();
+                if (json.code !== 0 || !json.data) throw new Error("Gagal ambil data video. Link private / mati.");
+                const data = json.data; document.getElementById('dlPreview').src = data.cover || data.origin_cover; document.getElementById('dlCaption').innerText = data.title || 'Tanpa Judul';
+                if (data.images && data.images.length > 0) {
+                    vidContainer.style.display = 'none'; slideContainer.style.display = 'block';
+                    data.images.forEach((imgUrl, index) => {
+                        const card = document.createElement('div'); card.className = 'preset-card'; card.style.padding = '10px';
+                        card.innerHTML = `<img src="${imgUrl}" style="width: 100%; border-radius: 8px; margin-bottom: 10px; object-fit: cover; max-height: 300px;"><a href="${imgUrl}" target="_blank" class="btn btn-open" style="width: 100%; background: var(--neon); color: #000;"><i class="fa-solid fa-download"></i> Download Foto ${index + 1}</a>`;
+                        slideGrid.appendChild(card);
+                    });
+                    window.showToast(`Berhasil menemukan ${data.images.length} foto!`, "success");
+                } else {
+                    vidContainer.style.display = 'block'; slideContainer.style.display = 'none';
+                    document.getElementById('dlMp3').href = data.music_info ? data.music_info.play : data.music; document.getElementById('dlNoWm').href = data.play; document.getElementById('dlHd').href = data.hdplay || data.play; 
+                    window.showToast("Video berhasil ditemukan!", "success");
+                }
+                result.style.display = 'block';
+            } catch (err) {
+                if (err.name === 'AbortError') { console.log("Fetch dibatalkan oleh user"); } 
+                else { window.showToast(err.message, "error"); }
+            } finally { btn.innerHTML = '<i class="fa-solid fa-download"></i> Ambil'; btn.disabled = false; }
+        };
+
+        window.clickedWA = function() {
+            hasClickedWA = true; localStorage.setItem('hasClickedWA', 'true');
+            const btn = document.getElementById('waChannelBtn'); const verifyBtn = document.getElementById('verifyBtn');
+            if (btn && verifyBtn) {
+                btn.style.background = 'var(--success)'; btn.style.color = '#000'; btn.style.borderColor = 'var(--success)'; btn.innerHTML = '<i class="fa-solid fa-check"></i> Saluran Sudah Dibuka';
+                verifyBtn.style.background = 'var(--neon)'; verifyBtn.style.color = '#000'; verifyBtn.style.borderColor = 'var(--neon)'; verifyBtn.style.boxShadow = '0 0 15px var(--neon-glow)';
+            }
+        };
+
+        window.verifyJoin = function() {
+            if (hasClickedWA) {
+                isVerified = true; localStorage.setItem('isVerified', 'true');
+                document.getElementById('verifyOverlay').remove(); window.showToast("Verifikasi Berhasil! Selamat menggunakan.", "success");
+            } else { window.showToast("Gagal! Kamu harus buka Saluran WA dulu.", "error"); }
+        };
+
+        function checkVerification() {
+            if (isVerified) return; 
+            const overlay = document.createElement('div'); overlay.id = 'verifyOverlay';
+            overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,15,0.95);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(10px);";
+            overlay.innerHTML = `
+                <div style="background:var(--bg-panel);padding:30px;border-radius:12px;border:1px solid var(--border);max-width:400px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+                    <i class="fa-brands fa-whatsapp" style="font-size:3rem;color:#25D366;margin-bottom:20px;" class="icon-pulse"></i>
+                    <h2 style="margin-bottom:10px;color:var(--text);">Wajib Join Saluran!</h2>
+                    <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.9rem;line-height:1.5;">Untuk menggunakan web ini, kamu wajib join Saluran WhatsApp Meki terlebih dahulu.</p>
+                    <a href="https://whatsapp.com/channel/0029VbEJo2zIXnlmWJDs4N0v" target="_blank" id="waChannelBtn" onclick="clickedWA()" style="display:flex;justify-content:center;align-items:center;gap:10px;background:var(--bg-box);color:var(--text);border:1px solid var(--border);padding:15px;border-radius:8px;text-decoration:none;font-weight:700;margin-bottom:15px;transition:0.3s;"><i class="fa-brands fa-whatsapp"></i> Buka Saluran WA</a>
+                    <button id="verifyBtn" onclick="verifyJoin()" style="width:100%;padding:15px;border-radius:8px;background:var(--bg-box);color:var(--text);border:1px solid var(--border);font-weight:700;cursor:pointer;transition:0.3s;">Verify</button>
+                </div>`;
+            document.body.appendChild(overlay);
+            if (hasClickedWA) {
+                const btn = document.getElementById('waChannelBtn'); const verifyBtn = document.getElementById('verifyBtn');
+                btn.style.background = 'var(--success)'; btn.style.color = '#000'; btn.style.borderColor = 'var(--success)'; btn.innerHTML = '<i class="fa-solid fa-check"></i> Saluran Sudah Dibuka';
+                verifyBtn.style.background = 'var(--neon)'; verifyBtn.style.color = '#000'; verifyBtn.style.borderColor = 'var(--neon)'; verifyBtn.style.boxShadow = '0 0 15px var(--neon-glow)';
+            }
+        }
+
+        function renderApp() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="toast-container" id="toastContainer"></div>
+                <nav class="navbar">
+                    <div class="logo" onclick="switchPage('page-search', 'nav-search')"><i class="fa-solid fa-cube icon-spin"></i> AM_FINDER</div>
+                    <button class="menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+                </nav>
+                <div class="sidebar" id="sidebar">
+                    <a href="#" id="nav-search" class="active" onclick="switchPage('page-search', 'nav-search')"><i class="fa-solid fa-crosshairs icon-pulse"></i> Pencari Preset</a>
+                    <a href="#" id="nav-downloader" onclick="switchPage('page-downloader', 'nav-downloader')"><i class="fa-solid fa-download icon-float"></i> Downloader TikTok</a>
+                    <a href="#" id="nav-favorite" onclick="switchPage('page-favorite', 'nav-favorite'); loadFavorites()"><i class="fa-solid fa-star icon-spin"></i> Favorit</a>
+                    <a href="#" id="nav-chat" onclick="switchPage('page-chat', 'nav-chat'); initChat()"><i class="fa-solid fa-comments icon-pulse"></i> Chat Global</a>
+                    
+                    <a href="#" id="nav-dev-settings" onclick="switchPage('page-dev-settings', 'nav-dev-settings')" style="display:none; color:var(--warn);"><i class="fa-solid fa-gear icon-spin"></i> Pengaturan Dev</a>
+
+                    <a href="#" id="nav-murid" onclick="switchPage('page-murid', 'nav-murid')"><i class="fa-solid fa-user-graduate icon-spin"></i> Murid AM Premium</a>
+                    <a href="#" id="nav-about" onclick="switchPage('page-about', 'nav-about')"><i class="fa-solid fa-circle-info icon-float"></i> Tentang Project</a>
+                    <a href="#" id="nav-contact" onclick="switchPage('page-contact', 'nav-contact')"><i class="fa-brands fa-telegram icon-spin"></i> Hubungi Developer</a>
+                </div>
+                
+                <main class="main-content">
+                    <div class="wrapper">
+                        <div id="page-search" class="page-section active">
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-link icon-pulse"></i>
+                                    <input type="text" id="ttLink" placeholder="Tempel link TikTok (https://vt.tiktok.com/...)" autocomplete="off" oninput="toggleClearBtn('ttLink', 'clearPreset')">
+                                    <button id="clearPreset" class="clear-btn" onclick="clearSearch('preset')"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                                <button class="btn-search" id="btnSearch" onclick="cariPreset()"><i class="fa-solid fa-play"></i> Cari</button>
+                            </div>
+                            <div id="console-box"></div>
+                            <div id="result-area">
+                                <div class="video-detail">
+                                    <video id="vidPreview" class="video-preview"></video>
+                                    <div><button id="btnUnmute" class="btn-unmute" style="display:none;" onclick="aktifkanSuara()"><i class="fa-solid fa-volume-xmark"></i> Aktifkan Suara</button></div>
+                                    <div id="vidCaption" class="video-caption">Loading...</div>
+                                    <div class="stats-grid">
+                                        <div class="stat-box"><span>ACCOUNT</span><strong id="statAccount">@-</strong></div>
+                                        <div class="stat-box"><span>COMMENTS</span><strong id="statComments">-</strong></div>
+                                        <div class="stat-box"><span>VIEWS</span><strong id="statViews">-</strong></div>
+                                        <div class="stat-box"><span>LIKES</span><strong id="statLikes">-</strong></div>
+                                    </div>
+                                </div>
+                                <div class="preset-header"><h3><i class="fa-solid fa-link icon-float" style="color:var(--neon)"></i> Preset links</h3><span class="preset-count" id="presetCount">0</span></div>
+                                <div id="presetList"></div>
+                            </div>
+                        </div>
+
+                        <div id="page-downloader" class="page-section">
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <i class="fa-solid fa-link icon-pulse"></i>
+                                    <input type="text" id="dlLink" placeholder="Tempel link TikTok buat di-download..." autocomplete="off" oninput="toggleClearBtn('dlLink', 'clearDownload')">
+                                    <button id="clearDownload" class="clear-btn" onclick="clearSearch('download')"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                                <button class="btn-search" id="btnDl" onclick="downloadTikTok()"><i class="fa-solid fa-download"></i> Ambil</button>
+                            </div>
+                            <div id="dl-result-area" style="display: none;">
+                                <div class="video-detail">
+                                    <img id="dlPreview" class="video-preview" style="object-fit: cover;">
+                                    <div id="dlCaption" class="video-caption" style="text-align: center; margin-bottom: 20px;"></div>
+                                </div>
+                                <div id="dlVideoContainer" style="display: none;">
+                                    <div class="preset-header"><h3><i class="fa-solid fa-cloud-arrow-down icon-float" style="color:var(--neon)"></i> Pilihan Download</h3></div>
+                                    <div class="action-buttons" style="flex-direction: column; gap: 12px;">
+                                        <a id="dlMp3" class="btn btn-open" style="background: #ff3366; color: #fff;" target="_blank"><i class="fa-solid fa-music icon-pulse"></i> Download MP3 (Audio)</a>
+                                        <a id="dlNoWm" class="btn btn-open" target="_blank"><i class="fa-solid fa-video icon-float"></i> Download Video (No Watermark)</a>
+                                        <a id="dlHd" class="btn btn-open" style="background: var(--neon); color: #000;" target="_blank"><i class="fa-solid fa-film icon-spin"></i> Download Video HD (No Watermark)</a>
+                                    </div>
+                                </div>
+                                <div id="dlSlideContainer" style="display: none;">
+                                    <div class="preset-header"><h3><i class="fa-solid fa-images icon-float" style="color:var(--neon)"></i> Download Slide Foto</h3></div>
+                                    <div id="dlSlideGrid" class="preset-grid"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="page-favorite" class="page-section">
+                            <div class="preset-header"><h3><i class="fa-solid fa-star icon-float" style="color:var(--neon)"></i> Preset Favorit</h3></div>
+                            <div id="favoriteList"></div>
+                        </div>
+
+                        <div id="page-chat" class="page-section">
+                            <div class="preset-header">
+                                <h3><i class="fa-solid fa-comments icon-pulse" style="color:var(--neon)"></i> Chat Global</h3>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <span class="preset-count" id="chatUser">${username || 'Belum Daftar'}</span>
+                                    ${username ? `<button onclick="logoutChat()" style="background:transparent; border:none; color:var(--danger); cursor:pointer;" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>` : ''}
+                                </div>
+                            </div>
+                            <div class="chat-container">
+                                <div class="chat-messages" id="chatMessages"></div>
+                                <div class="chat-input-area">
+                                    <label for="chatImg"><i class="fa-solid fa-image"></i></label>
+                                    <input type="file" id="chatImg" accept="image/*" style="display:none;" onchange="uploadChatImage(event)">
+                                    <input type="text" id="chatInput" placeholder="Ketik pesan..." onkeypress="if(event.key === 'Enter') sendChat()">
+                                    <button onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="page-dev-settings" class="page-section">
+                            <div class="preset-card">
+                                <h3 style="color:var(--warn); margin-bottom:15px; font-size:1.2rem;"><i class="fa-solid fa-gear icon-spin"></i> Pengaturan Developer</h3>
+                                <p style="font-size:.9rem; color:var(--text-muted); margin-bottom:20px;">Ubah password khusus untuk akun Developer (Mekinjir).</p>
+                                <div class="input-wrapper" style="margin-bottom:15px;">
+                                    <i class="fa-solid fa-key" style="position:absolute; left:15px; color:var(--text-muted);"></i>
+                                    <input type="text" id="newDevPass" placeholder="Password Dev baru..." style="padding-left:40px;">
+                                </div>
+                                <button onclick="updateDevPassword()" style="width:100%; padding:15px; background:var(--warn); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Simpan Password Baru</button>
+                            </div>
+                        </div>
+
+                        <div id="page-murid" class="page-section">
+                            <div class="preset-card">
+                                <h3 style="color:var(--neon); margin-bottom:15px; font-size:1.2rem;"><i class="fa-solid fa-user-graduate icon-float"></i> Murid AM Premium</h3>
+                                <p style="font-size:.9rem; color:var(--text-muted); margin-bottom:20px;">Gabung ke komunitas Murid AM Premium:</p>
+                                <div class="contact-grid">
+                                    <a href="https://t.me/+H3zgjBSTLkVjZjJl" target="_blank" class="contact-item"><div class="contact-icon"><i class="fa-brands fa-telegram icon-pulse" style="color: #0088cc;"></i></div><div class="contact-info"><span>Via Telegram</span><strong>Join Grup</strong></div></a>
+                                    <a href="https://chat.whatsapp.com/LyHJsfjaZ3I1x2rnHRyVLB?s=cl&p=a&mlu=4&ilr=4" target="_blank" class="contact-item"><div class="contact-icon"><i class="fa-brands fa-whatsapp icon-float" style="color: #25D366;"></i></div><div class="contact-info"><span>Via WhatsApp</span><strong>Join Grup</strong></div></a>
+                                    <a href="https://whatsapp.com/channel/0029VbEJo2zIXnlmWJDs4N0v" target="_blank" class="contact-item"><div class="contact-icon"><i class="fa-solid fa-bullhorn icon-spin" style="color: var(--neon);"></i></div><div class="contact-info"><span>Info Meki</span><strong>Saluran WA</strong></div></a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="page-about" class="page-section">
+                            <div class="preset-card"><h3 style="color:var(--neon); margin-bottom:15px; font-size:1.2rem;"><i class="fa-solid fa-circle-info icon-pulse"></i> Tentang Project</h3><p style="font-size:.9rem; line-height:1.7; color:var(--text-muted); margin-bottom:10px;"><b>AM Preset Finder</b> adalah web app yang dirancang khusus untuk mempermudah para editor video mencari link preset Alight Motion.</p></div>
+                        </div>
+
+                        <div id="page-contact" class="page-section">
+                            <div class="preset-card">
+                                <h3 style="color:var(--neon); margin-bottom:15px; font-size:1.2rem;"><i class="fa-solid fa-headset icon-float"></i> Kontak</h3>
+                                <div class="contact-grid">
+                                    <a href="https://wa.me/6285804039219" target="_blank" class="contact-item"><div class="contact-icon"><i class="fa-brands fa-whatsapp icon-pulse"></i></div><div class="contact-info"><span>WhatsApp</span><strong>+62 858-0403-9219</strong></div></a>
+                                    <a href="https://t.me/meki_real" target="_blank" class="contact-item"><div class="contact-icon"><i class="fa-brands fa-telegram icon-spin"></i></div><div class="contact-info"><span>Telegram</span><strong>@meki_real</strong></div></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- FLOATING AI CHAT -->
+                <div id="aiFab" class="ai-fab" onclick="toggleAiChat()">
+                    <i class="fa-solid fa-robot icon-pulse"></i>
+                </div>
+
+                <div id="aiChatWindow" class="ai-chat-window">
+                    <div class="ai-chat-header">
+                        <span><i class="fa-solid fa-robot"></i> AI Asisten</span>
+                        <button class="close-ai" onclick="toggleAiChat()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="aiMessages">
+                            <div class="chat-bubble"><span class="sender">AI Asisten</span><div>Halo! Aku asisten virtual web ini. Ada yang bisa dibantu soal cara pakai web, download, atau preset?</div></div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="aiInput" placeholder="Tanya sesuatu..." onkeypress="if(event.key === 'Enter') askAI()">
+                            <button onclick="askAI()"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL POPUP REGISTER USERNAME -->
+                <div id="usernameModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <i class="fa-solid fa-user-plus" style="font-size:3rem; color:var(--neon); margin-bottom:15px;"></i>
+                        <h2>Daftar Nama</h2>
+                        <p>Masukkan nama unik lu buat gabung Chat Global. (Tanpa password)</p>
+                        <div id="regError" class="error-msg"></div>
+                        <input type="text" id="regUsername" placeholder="Ketik nama lu..." onkeypress="if(event.key === 'Enter') submitUsername()">
+                        
+                        <input type="password" id="regPassword" placeholder="Password (Khusus Dev)" style="display:none; margin-top:10px;">
+                        
+                        <button id="btnRegister" onclick="submitUsername()">Daftar</button>
+                    </div>
+                </div>
+
+                <!-- CUSTOM CONFIRM MODAL -->
+                <div id="customModal" class="custom-modal">
+                    <div class="custom-modal-content">
+                        <h3 id="customModalTitle">Konfirmasi</h3>
+                        <p id="customModalMsg">Apakah Anda yakin?</p>
+                        <div class="custom-modal-actions">
+                            <button class="btn-modal-cancel" onclick="closeCustomModal()">Batal</button>
+                            <button id="customModalBtnConfirm" class="btn-modal-confirm" onclick="executeCustomModal()">Hapus</button>
+                        </div>
+                    </div>
+                </div>
+
+            `;
+        }
+
+        window.switchPage = function(pageId, navId) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.getElementById(navId).classList.add('active');
+            document.getElementById('sidebar').classList.remove('open');
+        };
+
+        window.toggleMenu = function() { document.getElementById('sidebar').classList.toggle('open'); };
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            renderApp();
+            checkVerification();
+            
+            if(isDev && username.toLowerCase() === DEV_USERNAME.toLowerCase()) {
+                document.getElementById('nav-dev-settings').style.display = 'flex';
+            }
+
+            document.getElementById('regUsername').addEventListener('input', function(e) {
+                const passInput = document.getElementById('regPassword');
+                if(this.value.toLowerCase() === 'mekinjir') {
+                    passInput.style.display = 'block';
+                } else {
+                    passInput.style.display = 'none';
+                    passInput.value = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
